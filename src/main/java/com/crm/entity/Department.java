@@ -7,8 +7,9 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
+
 
 import com.crm.utils.DateUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -20,7 +21,7 @@ import lombok.Setter;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author crm
@@ -56,7 +57,7 @@ public class Department {
     @TableField(value = "delete_flag", fill = FieldFill.INSERT)
     @TableLogic
     @JsonIgnore
-    private Byte deleteFlag;
+    private Integer deleteFlag;
 
     @ApiModelProperty("创建时间")
     @TableField(value = "create_time", fill = FieldFill.INSERT)
