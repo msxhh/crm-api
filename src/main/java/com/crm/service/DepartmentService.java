@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.crm.query.DepartmentQuery;
 import com.crm.query.IdQuery;
 
-import java.rmi.ServerException;
 import java.util.List;
 
 /**
@@ -20,10 +19,9 @@ import java.util.List;
 public interface DepartmentService extends IService<Department> {
 
     /**
-     * 获取部门的分页列表
-     *
-     * @param query 查询参数
-     * @return 部门分页列表
+     * 部门的分页列表
+     * @param query
+     * @return
      */
     PageResult<Department> getPage(DepartmentQuery query);
 
@@ -38,11 +36,11 @@ public interface DepartmentService extends IService<Department> {
      * 保存或编辑部门
      * @param department
      */
-    void saveOrEditDepartment(Department department) throws ServerException;
+    void saveOrEditDepartment(Department department);
 
     /**
      * 删除部门
      * @param query
      */
-    void removeDepartment(IdQuery query) throws ServerException;
+    void removeDepartment(IdQuery query);
 }
