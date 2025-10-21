@@ -4,6 +4,7 @@ import com.crm.common.exception.ServerException;
 import com.crm.common.result.PageResult;
 import com.crm.common.result.Result;
 import com.crm.query.CustomerQuery;
+import com.crm.query.IdQuery;
 import com.crm.service.CustomerService;
 import com.crm.vo.CustomerVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +13,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * <p>
@@ -47,5 +50,38 @@ public class CustomerController {
         return Result.ok();
     }
 
+    /**
+     * 删除客户信息
+     * @param ids
+     * @return
+     */
+    @PostMapping("remove")
+    @Operation(summary = "删除客户信息")
+    public Result removeCustomer(@RequestBody List<Integer> ids){
+        if(ids.isEmpty()){
+            throw new ServerException("请选择要删除的客户信息");
+        }
+        customerService.removeCustomer(ids);
+        return Result.ok();
+    }
+
+    /**
+     * 转入公海
+     */
+    @PostMapping("toPublic")
+    @Operation(summary = "转为公海客户")
+    public Result customerToPublicPool(@RequestBody @Validated IdQuery idQuery) {
+        customerService.customerToPublicPool(idQuery);
+        return Result.ok();
+    }
+
+    /**
+     * 领取客户
+     */
+    @PostMapping("toPrivate")
+    @Operation(summary = "领取客户")
+    public Result publicPoolToPrivate(@RequestBody @Validated IdQuery idQuery) {
+        customerService.publicPoolToPrivate(idQuery);
+        return Result.ok(); }
 
 }

@@ -10,6 +10,8 @@ import com.crm.vo.CustomerVO;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.servlet.resource.HttpResource;
 
+import java.util.List;
+
 /**
  * <p>
  *  服务类
@@ -39,5 +41,23 @@ public interface CustomerService extends IService<Customer> {
      * @param
      */
     void saveOrUpdate(CustomerVO customerVO);
+
+    /**
+     * 删除客户信息
+     * @param
+     */
+    void removeCustomer(List<Integer> ids);
+
+    /**
+     * 客户转⼊公海
+     * @param idQuery
+     */
+    void customerToPublicPool(IdQuery idQuery);
+
+    /**
+     * 领取客户
+     * @param idQuery
+     */
+    void publicPoolToPrivate(IdQuery idQuery);
 
 }

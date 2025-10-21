@@ -9,6 +9,7 @@ import com.crm.entity.Customer;
 import com.crm.entity.SysManager;
 import com.crm.mapper.CustomerMapper;
 import com.crm.query.CustomerQuery;
+import com.crm.query.IdQuery;
 import com.crm.security.user.SecurityUser;
 import com.crm.service.CustomerService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -36,7 +37,7 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer> i
     public PageResult<CustomerVO> getPage(CustomerQuery query) {
 //        1、声明分页参数
         Page<CustomerVO> page = new Page<>(query.getPage(), query.getLimit());
-        MPJLambdaWrapper<Customer> wrapper = new MPJLambdaWrapper<>();
+        MPJLambdaWrapper<Customer> wrapper = selection(query);
         Page<CustomerVO> result = baseMapper.selectJoinPage(page, CustomerVO.class, wrapper);
 
         return new PageResult<>(result.getRecords(), result.getTotal());
@@ -77,6 +78,46 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer> i
         }
     }
 
+    /**
+     * 删除客户信息
+     * @param
+     * @return
+     */
+    public void removeCustomer(List<Integer> ids) {
+        removeByIds(ids);
+    }
+
+    /**
+     * 转入公海
+     * @param
+     * @return
+     */
+    @Override
+    public void customerToPublicPool(IdQuery idQuery) {
+        Customer customer = baseMapper.selectById(idQuery.getId());
+        if(customer == null){
+            throw new ServerException("客户不存在,⽆法转⼊公海");
+        }
+        customer.setIsPublic(1);
+        customer.setOwnerId(null);
+        baseMapper.updateById(customer);
+    }
+
+    /**
+     * 领取用户
+     * @param idQuery
+     */
+    @Override
+    public void publicPoolToPrivate(IdQuery idQuery) {
+        Customer customer = baseMapper.selectById(idQuery.getId());
+        if (customer == null) {
+            throw new ServerException("客户不存在,⽆法转⼊公海");
+        }
+        customer.setIsPublic(0);
+        Integer ownerId = SecurityUser.getManagerId();
+        customer.setOwnerId(ownerId);
+        baseMapper.updateById(customer);
+    }
     private MPJLambdaWrapper<Customer> selection(CustomerQuery query) {
         MPJLambdaWrapper<Customer> wrapper = new MPJLambdaWrapper<>();
 //        2、构建查询关系
