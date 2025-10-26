@@ -65,4 +65,5 @@ auth:
     - /doc.html
     - /
     - /department/**
-    - /customer/** # 根路径
+    - /customer/**
+    - /product/** # 根路径
