@@ -31,9 +31,22 @@ public class ProductController {
     @Resource
     private ProductService productService;
 
+    /**
+     * 商品列表分页查询
+     * @param query
+     * @return
+     */
     @PostMapping("page")
     @Operation(summary = "商品列表分页查询")
     public Result<PageResult<Product>> getProductPage(@RequestBody @Validated ProductQuery query) {
         return Result.ok(productService.getProductPage(query));
     }
+
+    @PostMapping("saveOrEdit")
+    @Operation(summary = "保存或修改商品")
+    public Result saveOrEdit(@RequestBody @Validated Product product) {
+        productService.saveOrEdit(product);
+        return Result.ok();
+    }
+
 }

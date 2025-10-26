@@ -3,6 +3,7 @@ package com.crm.service.impl;
 import com.alibaba.excel.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.crm.common.exception.ServerException;
 import com.crm.common.result.PageResult;
 import com.crm.entity.Product;
 import com.crm.mapper.ProductMapper;
@@ -10,6 +11,8 @@ import com.crm.query.ProductQuery;
 import com.crm.service.ProductService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -35,9 +38,48 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         if (query.getStatus() != null) {
             wrapper.eq(Product::getStatus, query.getStatus());
         }
+        wrapper.orderByDesc(Product::getCreateTime);
 
 //        3、查询商品分页列表
         Page<Product> result = baseMapper.selectPage(page, wrapper);
         return new PageResult<>(result.getRecords(), result.getTotal());
+    }
+
+    @Override
+    public void saveOrEdit(Product product) {
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<Product>().eq(Product::getName, product.getName());
+        if (product.getId() == null) { // 新增
+            Product newProduct = baseMapper.selectOne(wrapper);
+            if (newProduct != null) {
+                throw new ServerException("该商品名称已存在，请勿重复添加");
+            }
+            baseMapper.insert(product);
+        } else { // 修改
+            wrapper.ne(Product::getId, product.getId());
+            Product oldProduct = baseMapper.selectOne(wrapper);
+            if (oldProduct != null) {
+                throw new ServerException("该商品名称已存在，请勿重复添加");
+            }
+            baseMapper.updateById(product);
+        }
+    }
+
+    @Override
+    public void batchUpdateProductState() {
+//        定时下架时间早于当前定时任务执行的时间，修改商品状态为下架
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<Product>()
+                .lt(Product::getOffShelfTime, LocalDateTime.now());
+        Product OffProduct = new Product();
+        OffProduct.setStatus(2);
+        OffProduct.setOffShelfTime(null);
+        baseMapper.update(OffProduct, wrapper);
+
+        // 定时上架时间早于当前定时任务执行时间，修改商品状态为上架
+        wrapper.clear();
+        wrapper.lt(Product::getOnShelfTime, LocalDateTime.now());
+        Product OnProduct = new Product();
+        OnProduct.setStatus(1);
+        OnProduct.setOnShelfTime(null);
+        baseMapper.update(OnProduct, wrapper);
     }
 }

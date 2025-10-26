@@ -14,6 +14,21 @@ import com.crm.query.ProductQuery;
  * @since 2025-10-12
  */
 public interface ProductService extends IService<Product> {
+    /**
+     * 商品列表分页查询
+     * @param query
+     * @return
+     */
     PageResult<Product> getProductPage(ProductQuery query);
 
+    /**
+     * 商品新增/修改
+     * @param product
+     */
+    void saveOrEdit(Product product);
+
+    /**
+     * 批量更新商品状态
+     */
+    void batchUpdateProductState();
 }

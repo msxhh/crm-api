@@ -6,6 +6,10 @@ spring:
   mvc:
     path-match:
       matching-strategy: ant_path_matcher #解决
+  servlet:
+    multipart:
+      max-file-size: 10MB    # 单个文件最大限制
+      max-request-size: 100MB  # 单次请求总文件最大限制
 
 
 mybatis-plus:
@@ -66,7 +70,8 @@ auth:
     - /
     - /department/**
     - /customer/**
-    - /product/** # 根路径
+    - /product/**
+    - /common/** # 根路径
 
 aliyun:
   oss:

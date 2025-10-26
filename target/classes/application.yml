@@ -6,6 +6,10 @@ spring:
   mvc:
     path-match:
       matching-strategy: ant_path_matcher #解决
+  servlet:
+    multipart:
+      max-file-size: 10MB    # 单个文件最大限制
+      max-request-size: 100MB  # 单次请求总文件最大限制
 
 
 mybatis-plus:
@@ -66,4 +70,16 @@ auth:
     - /
     - /department/**
     - /customer/**
-    - /product/** # 根路径
+    - /product/**
+    - /common/** # 根路径
+
+aliyun:
+  oss:
+    # oss对外服务的访问域名
+    endpoint: oss-cn-hangzhou.aliyuncs.com
+    # 访问身份验证中用到用户标识
+    accessKeyId: LTAI5tH3FzGcqBhmkTLaR3hs
+    # 用户用于加密签名字符串和oss用来验证签名字符串的密钥
+    accessKeySecret: IoKsQyruVqVbFxOYsLLQy8M5PsJX03
+    # oss的存储空间
+    bucketName: miax1
