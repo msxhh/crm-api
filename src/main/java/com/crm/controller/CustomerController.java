@@ -89,11 +89,10 @@ public class CustomerController {
         customerService.publicPoolToPrivate(idQuery);
         return Result.ok();
     }
-
-    @PostMapping("getCustomerTrendData")
+    @PostMapping("/trendData")
     @Operation(summary = "客户变化趋势数据")
     @Log(title = "客户变化趋势", businessType = BusinessType.SELECT)
     public Result<Map<String, List>> getCustomerTrendData(@RequestBody CustomerTrendQuery query) {
-        return Result.ok(customerService.getCustomerTrendData(query));
+        return Result.ok(customerService.getCustomerTrend(query));
     }
 }

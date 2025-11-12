@@ -67,6 +67,6 @@ public interface CustomerService extends IService<Customer> {
      * @param query
      * @return
      */
-    Map<String, List> getCustomerTrendData(CustomerTrendQuery query);
+    Map<String, List> getCustomerTrend(CustomerTrendQuery query);
 
 }

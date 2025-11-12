@@ -168,67 +168,48 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer> i
         return wrapper;
     }
 
-
     @Override
-    public Map<String, List> getCustomerTrendData(CustomerTrendQuery query) {
-        //1.X轴展示的时间
+    public Map<String, List> getCustomerTrend(CustomerTrendQuery query) {
+        // 1、X轴展示的时间
         List<String> timeList = new ArrayList<>();
-        //2.Y轴展示的数据
+        // 2、Y轴展示的数据
         List<Integer> countList = new ArrayList<>();
-        //3.Mapper查询返回的结果
-        List<CustomerTrendVO> tradeStatistics;
+        // 3、Mapper 查询返回的结果
+        List<CustomerTrendVO> result;
         if ("day".equals(query.getTransactionType())){
             LocalDateTime now = LocalDateTime.now();
-            // 截断毫秒和纳秒部分
-            LocalDateTime localDateTime = now.truncatedTo(ChronoUnit.SECONDS);
+            LocalDateTime localDateTime =now.truncatedTo(ChronoUnit.SECONDS);
             LocalDateTime startTime = now.withHour(0).withMinute(0).withSecond(0).truncatedTo(ChronoUnit.SECONDS);
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             List<String> timeRange = new ArrayList<>();
             timeRange.add(formatter.format(startTime));
             timeRange.add(formatter.format(localDateTime));
-//            query.setTimeRange(timeRange);
-
             timeList = getHourData(timeRange);
             query.setTimeRange(timeRange);
-            tradeStatistics = baseMapper.getTradeStatisticsByDay(query);
-        } else if ("mothrange".equals(query.getTransactionType())) {
+            result = baseMapper.getTradeStatistics(query);
+        }else if("monthrange".equals(query.getTransactionType())){
             query.setTimeFormat("%Y-%m");
-            timeList = getMonthInRange(query.getTimeRange().get(0), query.getTimeRange().get(1));
-            tradeStatistics = baseMapper.getTradeStatisticsByDay(query);
-        } else if ("week".equals(query.getTransactionType())) {
-            timeList = getWeekInRange(query.getTimeRange().get(0), query.getTimeRange().get(1));
-            tradeStatistics = baseMapper.getTradeStatisticsByWeek(query);
-        } else {
+            timeList = getMonthInRange(query.getTimeRange().get(0),query.getTimeRange().get(1));
+            result = baseMapper.getTradeStatisticsByDay(query);
+        }else if("week".equals(query.getTransactionType())){
+            timeList = getWeekInRange(query.getTimeRange().get(0),query.getTimeRange().get(1));
+            result = baseMapper.getTradeStatisticsByWeek(query);
+        }else{
             query.setTimeFormat("%Y-%m-%d");
-            timeList = getDatesInRange(query.getTimeRange().get(0), query.getTimeRange().get(1));
-            tradeStatistics = baseMapper.getTradeStatistics(query);
+            timeList = getDatesInRange(query.getTimeRange().get(0),query.getTimeRange().get(1));
+            result = baseMapper.getTradeStatisticsByDay(query);
         }
-        // 匹配时间点查询到的数据，没有值默认填充0
-        List<CustomerTrendVO> finalResult = tradeStatistics;
-//        timeList.forEach(time -> {
-//            finalResult.stream()
-//                    .filter(item -> item.getTradeTime().equals(time))
-//                    .findFirst()
-//                    .ifPresentOrElse(item -> countList.add(item.getTradeCount()), () -> countList.add(0));
-//        });
-        timeList.forEach(item -> {
-            CustomerTrendVO statisticsVO = finalResult.stream()
-                    .filter(vo -> {
-                        if ("day".equals(query.getTransactionType())) {
-                            // 比较小时段
-                            return item.substring(0, 2).equals(vo.getTradeTime().substring(0, 2));
-                        } else {
-                            return item.equals(vo.getTradeTime());
-                        }
-                    })
-                    .findFirst()
-                    .orElse(null);
-            if (statisticsVO != null) {
-                countList.add(statisticsVO.getTradeCount());
-            } else {
+
+        //匹配时间点查询到的数据，没有值默认填充0
+        List<CustomerTrendVO> finalResult = result;
+        timeList.forEach((String time) -> {
+            finalResult.stream().filter((CustomerTrendVO item) -> item.getTradeTime().equals(time)).findFirst().ifPresentOrElse((CustomerTrendVO item) -> {
+                countList.add(item.getTradeCount());
+            }, () -> {
                 countList.add(0);
-            }
+            });
         });
+
         Map<String, List> resultMap = new HashMap<>();
         resultMap.put("timeList", timeList);
         resultMap.put("countList", countList);
