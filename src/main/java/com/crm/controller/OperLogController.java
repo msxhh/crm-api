@@ -9,6 +9,7 @@ import com.crm.query.OperLogQuery;
 import com.crm.service.OperLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,13 +26,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/operLog")
 @AllArgsConstructor
 public class OperLogController {
-
     private final OperLogService operLogService;
 
     @PostMapping("page")
     @Operation(summary = "操作日志分页查询")
-    @Log(title = "操作日志分页查询", businessType = BusinessType.SELECT)
-    public Result<PageResult<OperLog>> getPage(@RequestBody OperLogQuery query) {
-        return Result.ok(operLogService.page(query));
+    @Log(title = "操作日志查询", businessType = BusinessType.SELECT)
+    public Result<PageResult<OperLog>> getPage(@RequestBody @Valid OperLogQuery query) {
+        return Result.ok(operLogService.getPage(query));
     }
 }

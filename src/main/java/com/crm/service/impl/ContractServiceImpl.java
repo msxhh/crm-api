@@ -12,24 +12,25 @@ import com.crm.entity.Customer;
 import com.crm.entity.Product;
 import com.crm.mapper.ContractMapper;
 import com.crm.mapper.ContractProductMapper;
-import com.crm.mapper.CustomerMapper;
 import com.crm.mapper.ProductMapper;
 import com.crm.query.ContractQuery;
 import com.crm.query.ContractTrendQuery;
 import com.crm.security.user.SecurityUser;
 import com.crm.service.ContractService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.crm.vo.ContractTrendVO;
+import com.crm.utils.DateUtils;
+import com.crm.vo.ContractTrendPieVO;
 import com.crm.vo.ContractVO;
+import com.crm.vo.CustomerTrendVO;
 import com.crm.vo.ProductVO;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
-import jakarta.annotation.Resource;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -202,7 +203,7 @@ public class ContractServiceImpl extends ServiceImpl<ContractMapper, Contract> i
         return contractProduct;
     }
 
-//    检查商品数量
+    //    检查商品数量
     private Product checkProduct(Integer productId, int count){
         Product product = productMapper.selectById(productId);
         if (product == null) {
@@ -214,53 +215,37 @@ public class ContractServiceImpl extends ServiceImpl<ContractMapper, Contract> i
         return product;
     }
 
-//    增加库存
+    //    增加库存
     private void increaseStock(Product product, int count){
         product.setStock(product.getStock() + count);
         product.setSales(product.getSales() - count);
         productMapper.updateById(product);
     }
 
-//    减少库存
+    //    减少库存
     private void decreaseStock(Product product, int count){
         product.setStock(product.getStock() - count);
         product.setSales(product.getSales() + count);
         productMapper.updateById(product);
     }
 
-    @Resource
-    private ContractMapper contractMapper;
-
-    @Resource
-    private CustomerMapper customerMapper;
-
     @Override
-    public Map<String, List> getContractTrend(ContractTrendQuery query) {
-        List<ContractTrendVO> trends = contractMapper.getContractTrend(query);
-        Map<String, List> result = new HashMap<>();
+    public List<ContractTrendPieVO> getContractStatusPieData() {
+        // 获取当前登录用户ID，确保数据权限
+        Integer managerId = SecurityUser.getManagerId();
+        // 调用Mapper方法按状态统计数量（传入用户ID）
+        List<ContractTrendPieVO> pieData = baseMapper.countByStatus(managerId);
 
-        // 处理时间轴和数据列表
-        List<String> timeList = trends.stream().map(ContractTrendVO::getTime).toList();
-        List<Integer> countList = trends.stream().map(ContractTrendVO::getCount).toList();
+        // 计算总数量和占比（基于数量计算）
+        int total = pieData.stream()
+                .mapToInt(ContractTrendPieVO::getCount)
+                .sum();
 
-        result.put("timeList", timeList);
-        result.put("countList", countList);
-        return result;
-    }
+        pieData.forEach(item -> {
+            // 计算占比（数量/总数量*100）
+            item.setProportion(total > 0 ? (double) item.getCount() / total * 100 : 0);
+        });
 
-    @Override
-    public List<ContractTrendVO> getContractStatusPie() {
-        return contractMapper.getContractStatusPie();
-    }
-
-    @Override
-    public Map<String, Integer> getDashboardStats() {
-        Map<String, Integer> stats = new HashMap<>();
-        // 今日新增合同
-        stats.put("todayNewContract", contractMapper.getTodayNewCount());
-        // 今日新增客户(复用现有方法)
-        // stats.put("todayNewCustomer", customerMapper.getTodayNewCount());
-        // 可以继续添加其他统计项
-        return stats;
+        return pieData;
     }
 }

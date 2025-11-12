@@ -4,12 +4,10 @@ import com.crm.common.result.PageResult;
 import com.crm.entity.Contract;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.crm.query.ContractQuery;
-import com.crm.query.ContractTrendQuery;
-import com.crm.vo.ContractTrendVO;
+import com.crm.vo.ContractTrendPieVO;
 import com.crm.vo.ContractVO;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * <p>
@@ -32,13 +30,6 @@ public interface ContractService extends IService<Contract> {
      */
     void saveOrUpdate(ContractVO contractVO);
 
-
-    // 合同趋势统计
-    Map<String, List> getContractTrend(ContractTrendQuery query);
-
-    // 合同状态分布
-    List<ContractTrendVO> getContractStatusPie();
-
-    // 首页数据卡片
-    Map<String, Integer> getDashboardStats();
+    // 新增：按合同状态统计饼图数据
+    List<ContractTrendPieVO> getContractStatusPieData();
 }
