@@ -9,18 +9,28 @@ import com.crm.entity.Customer;
 import com.crm.entity.SysManager;
 import com.crm.mapper.CustomerMapper;
 import com.crm.query.CustomerQuery;
+import com.crm.query.CustomerTrendQuery;
 import com.crm.query.IdQuery;
 import com.crm.security.user.SecurityUser;
 import com.crm.service.CustomerService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.crm.utils.ExcelUtils;
+import com.crm.vo.CustomerTrendVO;
 import com.crm.vo.CustomerVO;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static com.crm.utils.DateUtils.*;
 
 /**
  * <p>
@@ -118,6 +128,7 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer> i
         customer.setOwnerId(ownerId);
         baseMapper.updateById(customer);
     }
+
     private MPJLambdaWrapper<Customer> selection(CustomerQuery query) {
         MPJLambdaWrapper<Customer> wrapper = new MPJLambdaWrapper<>();
 //        2、构建查询关系
@@ -156,4 +167,72 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer> i
         wrapper.orderByDesc(Customer::getCreateTime);
         return wrapper;
     }
+
+
+    @Override
+    public Map<String, List> getCustomerTrendData(CustomerTrendQuery query) {
+        //1.X轴展示的时间
+        List<String> timeList = new ArrayList<>();
+        //2.Y轴展示的数据
+        List<Integer> countList = new ArrayList<>();
+        //3.Mapper查询返回的结果
+        List<CustomerTrendVO> tradeStatistics;
+        if ("day".equals(query.getTransactionType())){
+            LocalDateTime now = LocalDateTime.now();
+            // 截断毫秒和纳秒部分
+            LocalDateTime localDateTime = now.truncatedTo(ChronoUnit.SECONDS);
+            LocalDateTime startTime = now.withHour(0).withMinute(0).withSecond(0).truncatedTo(ChronoUnit.SECONDS);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            List<String> timeRange = new ArrayList<>();
+            timeRange.add(formatter.format(startTime));
+            timeRange.add(formatter.format(localDateTime));
+//            query.setTimeRange(timeRange);
+
+            timeList = getHourData(timeRange);
+            query.setTimeRange(timeRange);
+            tradeStatistics = baseMapper.getTradeStatisticsByDay(query);
+        } else if ("mothrange".equals(query.getTransactionType())) {
+            query.setTimeFormat("%Y-%m");
+            timeList = getMonthInRange(query.getTimeRange().get(0), query.getTimeRange().get(1));
+            tradeStatistics = baseMapper.getTradeStatisticsByDay(query);
+        } else if ("week".equals(query.getTransactionType())) {
+            timeList = getWeekInRange(query.getTimeRange().get(0), query.getTimeRange().get(1));
+            tradeStatistics = baseMapper.getTradeStatisticsByWeek(query);
+        } else {
+            query.setTimeFormat("%Y-%m-%d");
+            timeList = getDatesInRange(query.getTimeRange().get(0), query.getTimeRange().get(1));
+            tradeStatistics = baseMapper.getTradeStatistics(query);
+        }
+        // 匹配时间点查询到的数据，没有值默认填充0
+        List<CustomerTrendVO> finalResult = tradeStatistics;
+//        timeList.forEach(time -> {
+//            finalResult.stream()
+//                    .filter(item -> item.getTradeTime().equals(time))
+//                    .findFirst()
+//                    .ifPresentOrElse(item -> countList.add(item.getTradeCount()), () -> countList.add(0));
+//        });
+        timeList.forEach(item -> {
+            CustomerTrendVO statisticsVO = finalResult.stream()
+                    .filter(vo -> {
+                        if ("day".equals(query.getTransactionType())) {
+                            // 比较小时段
+                            return item.substring(0, 2).equals(vo.getTradeTime().substring(0, 2));
+                        } else {
+                            return item.equals(vo.getTradeTime());
+                        }
+                    })
+                    .findFirst()
+                    .orElse(null);
+            if (statisticsVO != null) {
+                countList.add(statisticsVO.getTradeCount());
+            } else {
+                countList.add(0);
+            }
+        });
+        Map<String, List> resultMap = new HashMap<>();
+        resultMap.put("timeList", timeList);
+        resultMap.put("countList", countList);
+        return resultMap;
+    }
+
 }

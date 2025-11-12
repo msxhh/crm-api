@@ -1,9 +1,12 @@
 package com.crm.controller;
 
+import com.crm.common.aop.Log;
 import com.crm.common.exception.ServerException;
 import com.crm.common.result.PageResult;
 import com.crm.common.result.Result;
+import com.crm.enums.BusinessType;
 import com.crm.query.CustomerQuery;
+import com.crm.query.CustomerTrendQuery;
 import com.crm.query.IdQuery;
 import com.crm.service.CustomerService;
 import com.crm.vo.CustomerVO;
@@ -15,6 +18,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -33,7 +37,8 @@ public class CustomerController {
 
     @PostMapping("page")
     @Operation(summary = "客户列表-分页")
-    public Result<PageResult<CustomerVO>> getPage(@RequestBody CustomerQuery query) {
+    @Log(title = "客户管理-分页", businessType = BusinessType.SELECT)
+    public Result<PageResult<CustomerVO>> getPage(@RequestBody @Validated CustomerQuery query) {
         return Result.ok(customerService.getPage(query));
     }
 
@@ -82,6 +87,13 @@ public class CustomerController {
     @Operation(summary = "领取客户")
     public Result publicPoolToPrivate(@RequestBody @Validated IdQuery idQuery) {
         customerService.publicPoolToPrivate(idQuery);
-        return Result.ok(); }
+        return Result.ok();
+    }
 
+    @PostMapping("getCustomerTrendData")
+    @Operation(summary = "客户变化趋势数据")
+    @Log(title = "客户变化趋势", businessType = BusinessType.SELECT)
+    public Result<Map<String, List>> getCustomerTrendData(@RequestBody CustomerTrendQuery query) {
+        return Result.ok(customerService.getCustomerTrendData(query));
+    }
 }

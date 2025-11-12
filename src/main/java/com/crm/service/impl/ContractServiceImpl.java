@@ -12,21 +12,27 @@ import com.crm.entity.Customer;
 import com.crm.entity.Product;
 import com.crm.mapper.ContractMapper;
 import com.crm.mapper.ContractProductMapper;
+import com.crm.mapper.CustomerMapper;
 import com.crm.mapper.ProductMapper;
 import com.crm.query.ContractQuery;
+import com.crm.query.ContractTrendQuery;
 import com.crm.security.user.SecurityUser;
 import com.crm.service.ContractService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.crm.vo.ContractTrendVO;
 import com.crm.vo.ContractVO;
 import com.crm.vo.ProductVO;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
+import jakarta.annotation.Resource;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.crm.utils.NumberUtils.generateContractNumber;
 
@@ -220,5 +226,41 @@ public class ContractServiceImpl extends ServiceImpl<ContractMapper, Contract> i
         product.setStock(product.getStock() - count);
         product.setSales(product.getSales() + count);
         productMapper.updateById(product);
+    }
+
+    @Resource
+    private ContractMapper contractMapper;
+
+    @Resource
+    private CustomerMapper customerMapper;
+
+    @Override
+    public Map<String, List> getContractTrend(ContractTrendQuery query) {
+        List<ContractTrendVO> trends = contractMapper.getContractTrend(query);
+        Map<String, List> result = new HashMap<>();
+
+        // 处理时间轴和数据列表
+        List<String> timeList = trends.stream().map(ContractTrendVO::getTime).toList();
+        List<Integer> countList = trends.stream().map(ContractTrendVO::getCount).toList();
+
+        result.put("timeList", timeList);
+        result.put("countList", countList);
+        return result;
+    }
+
+    @Override
+    public List<ContractTrendVO> getContractStatusPie() {
+        return contractMapper.getContractStatusPie();
+    }
+
+    @Override
+    public Map<String, Integer> getDashboardStats() {
+        Map<String, Integer> stats = new HashMap<>();
+        // 今日新增合同
+        stats.put("todayNewContract", contractMapper.getTodayNewCount());
+        // 今日新增客户(复用现有方法)
+        // stats.put("todayNewCustomer", customerMapper.getTodayNewCount());
+        // 可以继续添加其他统计项
+        return stats;
     }
 }
