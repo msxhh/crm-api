@@ -22,5 +22,5 @@ public interface CustomerMapper extends MPJBaseMapper<Customer> {
     List<CustomerTrendVO> getTradeStatistics(@Param("query")CustomerTrendQuery  query);
     List<CustomerTrendVO> getTradeStatisticsByDay(@Param("query")CustomerTrendQuery  query);
     List<CustomerTrendVO> getTradeStatisticsByWeek(@Param("query")CustomerTrendQuery  query);
-    int countByCreateDate(@Param("date") LocalDate date);
+    int countByDate(@Param("date") LocalDate date);
 }
